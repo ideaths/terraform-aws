@@ -11,6 +11,56 @@ variable "environment" {
   default     = "dev"
 }
 
+variable "rds_engine" {
+  description = "Database engine type"
+  type        = string
+  default     = "mysql"
+}
+
+variable "rds_engine_version" {
+  description = "Database engine version"
+  type        = string
+  default     = "8.0"
+}
+
+variable "rds_instance_class" {
+  description = "Database instance type"
+  type        = string
+  default     = "db.t3.small"
+}
+
+variable "rds_database_name" {
+  description = "Name of the database"
+  type        = string
+  default     = "mydb"
+}
+
+variable "rds_username" {
+  description = "Database master username"
+  type        = string
+  default     = "admin"
+  sensitive   = true
+}
+
+variable "rds_password" {
+  description = "Database master password"
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "domain_name" {
+  description = "Domain name for Route 53 and ACM"
+  type        = string
+  default     = "example.com"
+}
+
+variable "dynamodb_table_name" {
+  description = "Name for the DynamoDB table"
+  type        = string
+  default     = "my-dynamodb-table"
+}
+
 variable "vpc_cidr" {
   description = "CIDR block for VPC"
   type        = string
