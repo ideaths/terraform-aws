@@ -1,5 +1,26 @@
 # --- main.tf ---
 
+# Module IAM cho phân quyền tổng thể
+module "iam" {
+  source  = "terraform-aws-modules/iam/aws"
+  version = "5.30.0"
+  
+  # Tạo role cho các service khác như Lambda, EC2, etc.
+  create_role = true
+  role_name   = "app-role-${var.environment}"
+  role_requires_mfa = false
+  
+  # Gán policy cho role
+  role_policy_arns = [
+    "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess",
+    "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+  ]
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
 # Sử dụng module VPC từ AWS
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
@@ -209,8 +230,67 @@ module "alb" {
     }
   ]
 
+  https_listeners = [
+    {
+      port               = 443
+      protocol           = "HTTPS"
+      certificate_arn    = module.acm.acm_certificate_arn
+      target_group_index = 0
+    }
+  ]
+
   tags = {
     Environment = var.environment
     Name        = "main-alb-${var.environment}"
   }
+}
+
+# ACM Certificate
+module "acm" {
+  source  = "terraform-aws-modules/acm/aws"
+  version = "4.3.2"
+
+  domain_name  = var.domain_name
+  zone_id      = module.route53.route53_zone_zone_id
+
+  subject_alternative_names = [
+    "*.${var.domain_name}"
+  ]
+
+  wait_for_validation = true
+
+  tags = {
+    Environment = var.environment
+    Name        = "${var.domain_name}-cert"
+  }
+}
+
+# Route 53
+module "route53" {
+  source  = "terraform-aws-modules/route53/aws"
+  version = "2.10.2"
+
+  create_zone = true
+  
+  zones = {
+    "${var.domain_name}" = {
+      comment = "Domain for ${var.environment} environment"
+      tags = {
+        Environment = var.environment
+      }
+    }
+  }
+
+  records = {
+    "${var.domain_name}" = {
+      name    = var.domain_name
+      type    = "A"
+      alias   = {
+        name    = module.alb.lb_dns_name
+        zone_id = module.alb.lb_zone_id
+      }
+    }
+  }
+
+  depends_on = [module.alb]
 }
