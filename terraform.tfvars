@@ -5,6 +5,13 @@ aws_region  = "ap-southeast-1"
 environment = "dev"    # Các giá trị: dev, staging, prod
 
 # ===============================================
+# Cấu hình Backend S3 - Lưu Terraform State
+# ===============================================
+terraform_state_bucket = "my-terraform-states"        # Tên bucket để lưu Terraform state
+terraform_state_key    = "infrastructure/terraform.tfstate"  # Đường dẫn trong bucket
+terraform_lock_table   = "terraform-state-locks"      # Tên bảng DynamoDB để lock state
+
+# ===============================================
 # Cấu hình mạng - VPC, Subnet, AZ
 # ===============================================
 vpc_name              = "app-vpc-dev"
